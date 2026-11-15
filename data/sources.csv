@@ -1,0 +1,9 @@
+source_id,source_type,source_name,location,initial_state,last_batch_date
+SUP-01,SUPPLIER,Sahyadri Dairy Ingredients,Hassan,NORMAL,2026-04-24
+SUP-02,SUPPLIER,Mysore Pharma Excipients,Mysuru,NORMAL,2026-04-24
+SUP-03,SUPPLIER,Godavari Fine Chem,Rajahmundry,NORMAL,2026-04-24
+SUP-04,SUPPLIER,Kaveri Agro Pulp,Krishnagiri,NORMAL,2026-04-24
+SUP-05,SUPPLIER,Western Ghats Cocoa Co,Puttur,NORMAL,2026-04-24
+SUP-06,SUPPLIER,Deccan Capsules Pvt Ltd,Hyderabad,REDUCED,2026-04-28
+LINE-01,LINE,Blending & Filling Line 1,Bengaluru plant,NORMAL,2026-04-24
+LINE-02,LINE,Granulation & Packing Line 2,Bengaluru plant,REDUCED,2026-03-20

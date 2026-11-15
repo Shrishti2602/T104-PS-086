@@ -1,0 +1,9 @@
+product_id,product_name,category,shelf_life_days,aql_critical,aql_major,aql_minor
+PRD-01,Paracetamol 500 mg tablets (bulk),PHARMA,730,0.065,1.0,2.5
+PRD-02,Amoxicillin 250 mg capsules (bulk),PHARMA,730,0.065,1.0,2.5
+PRD-03,ORS powder sachets,PHARMA,540,0.065,1.0,2.5
+PRD-04,Skimmed milk powder 25 kg,FOOD,180,0.065,1.0,2.5
+PRD-05,Whey protein concentrate 20 kg,FOOD,180,0.065,1.0,1.0
+PRD-06,Cocoa powder 10 kg,FOOD,270,0.065,1.0,2.5
+PRD-07,Fruit pulp (aseptic) 200 kg drum,FOOD,90,0.065,1.0,2.5
+PRD-08,Gelatin capsule shells,PHARMA,365,0.065,1.0,2.5
