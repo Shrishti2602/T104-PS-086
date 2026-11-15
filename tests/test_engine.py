@@ -183,3 +183,45 @@ def test_corrective_action_is_refused_when_source_not_discontinued(engine):
         engine.corrective_action(
             source_id, "2026-10-01 09:00:00", "CAR-TEST-02"
         )
+def test_critical_defect_during_hold_reinspection_triggers_recall(engine):
+    related_ids = prepare_recall_scenario(engine)
+
+    target_id = "BT-0073"
+    runtime = engine.batch_runtime[target_id]
+
+    # Place the target batch on hold.
+    runtime.status = "ON_HOLD"
+
+    # Ensure sampling is allowed.
+    batch = engine.batches[target_id]
+    engine.source_states[batch.source_id].state = "NORMAL"
+
+    # Perform hold reinspection.
+    engine.sample_batch(
+        target_id,
+        "2026-08-02 09:00:00",
+    )
+
+    assert runtime.hold_reinspection is True
+
+    # Record a critical defect.
+    engine.record_result(
+        target_id,
+        "2026-08-02 12:00:00",
+        critical=1,
+        major=0,
+        minor=0,
+    )
+
+    # The critical defect must automatically trigger recall.
+    assert runtime.status == "RECALLED"
+
+    # Related eligible batches should also be recalled.
+    recalled_ids = {
+        batch_id
+        for batch_id in related_ids
+        if engine.batch_runtime[batch_id].status == "RECALLED"
+    }
+
+    assert target_id in recalled_ids
+    assert len(recalled_ids) >= 1
