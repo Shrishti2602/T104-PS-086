@@ -1,0 +1,10 @@
+source_id,timestamp,from_state,to_state,trigger_batch_id,reason
+LINE-02,2026-05-04 12:04:00,REDUCED,NORMAL,BT-0001,Production gap greater than 30 days.
+SUP-06,2026-05-09 09:34:00,REDUCED,NORMAL,BT-0004,Accepted result between Ac and Re while REDUCED.
+SUP-03,2026-05-19 08:24:00,NORMAL,TIGHTENED,BT-0012,2 rejections within 5 consecutive batches.
+SUP-02,2026-07-16 14:55:00,NORMAL,TIGHTENED,BT-0054,2 rejections within 5 consecutive batches.
+SUP-03,2026-08-16 16:34:00,TIGHTENED,DISCONTINUED,BT-0077,5 rejections while in TIGHTENED state.
+SUP-03,2026-08-26 12:26:00,DISCONTINUED,TIGHTENED,,Corrective action recorded: CAR-2026-520.
+SUP-04,2026-08-28 17:25:00,NORMAL,REDUCED,BT-0086,10 consecutive acceptances within reduced limits.
+SUP-02,2026-09-10 08:19:00,TIGHTENED,NORMAL,BT-0093,5 consecutive acceptances while TIGHTENED.
+SUP-03,2026-10-10 08:31:00,TIGHTENED,NORMAL,BT-0113,5 consecutive acceptances while TIGHTENED.

@@ -1,4 +1,4 @@
-
+import csv
 from pathlib import Path
 
 from quality_engine.data_loader import (
@@ -16,6 +16,51 @@ from quality_engine.command_processor import CommandProcessor
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_ROOT / "data"
+
+def export_reports(engine):
+    """Export inspection, switching and lifecycle reports to CSV."""
+
+    reports = {
+        "batch_decisions.csv": (
+            [
+                "batch_id", "inspection_no", "source_state",
+                "code_letter", "n_critical", "n_major", "n_minor",
+                "full_inspection", "critical", "major", "minor",
+                "ac_major", "re_major", "ac_minor", "re_minor",
+                "decision", "batch_status", "late", "rule_ids",
+            ],
+            engine.batch_decisions,
+        ),
+        "switching_history.csv": (
+            [
+                "source_id", "timestamp", "from_state", "to_state",
+                "trigger_batch_id", "reason",
+            ],
+            engine.switching_history,
+        ),
+        "release_register.csv": (
+            [
+                "timestamp", "batch_id", "event", "from_status",
+                "to_status", "reason", "cause_ref",
+            ],
+            engine.release_register,
+        ),
+    }
+
+    for filename, (fieldnames, records) in reports.items():
+        with (PROJECT_ROOT / filename).open(
+            "w", newline="", encoding="utf-8"
+        ) as csv_file:
+            writer = csv.DictWriter(
+                csv_file,
+                fieldnames=fieldnames,
+                extrasaction="ignore",
+            )
+            writer.writeheader()
+            writer.writerows(records)
+
+        print(f"Report exported: {filename} ({len(records)} rows)")
+
 
 
 def main():
@@ -55,6 +100,8 @@ def main():
     print(f"Lifecycle events: {len(engine.release_register)}")
     print(f"Switching transitions: {len(engine.switching_history)}")
     print(f"Print requests: {len(processor.print_requests)}")
+    print("\nExporting reports...")
+    export_reports(engine)
 
     print("\nCommand execution completed.")
 
