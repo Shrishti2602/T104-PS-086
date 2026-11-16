@@ -1,4 +1,4 @@
-﻿# PS-086 â€“ AQL Sampling, Inspection Severity and Batch Release Engine
+﻿# PS-086  AQL Sampling, Inspection Severity and Batch Release Engine
 
 **Team:** T104
 **Project:** AQL Sampling, Inspection Severity and Batch Release Engine
@@ -42,15 +42,15 @@ The application is a local, command-line and file-driven backend system.
 
 ```text
 T104-PS-086/
-â”œâ”€â”€ data/
-â”‚   â”œâ”€â”€ products.csv
-â”‚   â”œâ”€â”€ sources.csv
-â”‚   â”œâ”€â”€ batches.csv
-â”‚   â”œâ”€â”€ lot_size_bands.csv
-â”‚   â”œâ”€â”€ sampling_table.csv
-â”‚   â””â”€â”€ commands.txt
-â”œâ”€â”€ src/
-â”‚   â””â”€â”€ quality_engine/
+--------- data/
+---   ------ products.csv
+---   ------ sources.csv
+---   ------ batches.csv
+---   -------lot_size_bands.csv
+---   -------sampling_table.csv
+---   -------commands.txt
+---------- src/
+---   ------- quality_engine/
 â”‚       â”œâ”€â”€ __init__.py
 â”‚       â””â”€â”€ engine.py
 â”œâ”€â”€ tests/
