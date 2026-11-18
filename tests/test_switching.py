@@ -166,3 +166,44 @@ def test_switching_history_records_transitions():
     assert len(source.history) == 1
     assert source.history[0].from_state == "NORMAL"
     assert source.history[0].to_state == "TIGHTENED"
+
+def test_second_rejection_on_fifth_batch_boundary_triggers_tightened():
+    source = SourceSwitchingState("SUP-01")
+
+    record(source, "B1", "REJECT")
+    record(source, "B2", "ACCEPT")
+    record(source, "B3", "ACCEPT")
+    record(source, "B4", "ACCEPT")
+    event = record(source, "B5", "REJECT")
+
+    assert source.state == "TIGHTENED"
+    assert event.to_state == "TIGHTENED"
+
+def test_reduced_transition_uses_tenth_counted_lots_limits():
+    source = SourceSwitchingState("SUP-TEST")
+
+    ac = {"critical": 0, "major": 2, "minor": 5}
+    re = {"critical": 1, "major": 5, "minor": 10}
+
+    # First nine lots have a high major-defect reduced limit.
+    for number in range(1, 10):
+        source.record_inspection(
+            batch_id=f"B{number}",
+            decision="ACCEPT",
+            defects={"critical": 0, "major": 0, "minor": 0},
+            ac_limits=ac,
+            re_limits=re,
+            reduced_limits={"critical": 0, "major": 10, "minor": 10},
+        )
+
+    # The tenth lot has a major reduced limit of zero.
+    source.record_inspection(
+        batch_id="B10",
+        decision="ACCEPT",
+        defects={"critical": 0, "major": 1, "minor": 0},
+        ac_limits=ac,
+        re_limits=re,
+        reduced_limits={"critical": 0, "major": 0, "minor": 10},
+    )
+
+    assert source.state == "NORMAL"

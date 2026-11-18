@@ -135,6 +135,7 @@ class BatchEngine:
 
         return runtime
 
+
     def sample_batch(self, batch_id, timestamp):
         """Plan and record a batch sample."""
 
@@ -157,6 +158,21 @@ class BatchEngine:
         source_state = self.source_states[batch.source_id]
 
         if source_state.state == "DISCONTINUED":
+            self.release_register.append({
+                "timestamp": sampled_at.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+                "batch_id": batch_id,
+                "event": "SAMPLE_REFUSED",
+                "from_status": runtime.status,
+                "to_status": runtime.status,
+                "reason": (
+                    f"Sampling refused: source {batch.source_id} "
+                    "is DISCONTINUED."
+                ),
+                "cause_ref": "",
+            })
+
             raise ValueError(
                 f"Sampling refused: source {batch.source_id} "
                 "is DISCONTINUED."
@@ -226,6 +242,7 @@ class BatchEngine:
 
         return plan
 
+
     def record_result(
         self,
         batch_id,
@@ -293,6 +310,12 @@ class BatchEngine:
                 reason = "SHORT_DATED"
 
         previous_status = runtime.status
+
+        # Keep a critically defective hold reinspection ON_HOLD
+        # until the recall cascade records ON_HOLD -> RECALLED.
+        if runtime.hold_reinspection and critical > 0:
+            batch_status = "ON_HOLD"
+
         runtime.status = batch_status
 
         if batch_status == "RELEASED":
@@ -355,6 +378,50 @@ class BatchEngine:
         )
 
         self._capture_switching_events(batch.source_id, result_time)
+                # Build rule references for this inspection result.
+        applied_rules = ["BR-01", "BR-02"]
+
+        if plan.full_inspection:
+            applied_rules.append("BR-03")
+
+        # Rework and hold inspections have separate rule references.
+        if runtime.reworked:
+            applied_rules.append("BR-10")
+
+        if runtime.hold_reinspection:
+            applied_rules.append("BR-11")
+
+            if critical > 0:
+                applied_rules.append("BR-12")
+
+        if reason == "SHORT_DATED":
+            applied_rules.append("BR-13")
+
+        if late:
+            applied_rules.append("BR-14")
+
+        # Map actual switching events to their business rules.
+        switching_rule_map = {
+            "2 rejections within 5 consecutive batches.": "BR-04",
+            "5 consecutive acceptances while TIGHTENED.": "BR-05",
+            "5 rejections while in TIGHTENED state.": "BR-06",
+            "10 consecutive acceptances within reduced limits.": "BR-07",
+            "Rejection while REDUCED.": "BR-08",
+            "Accepted result between Ac and Re while REDUCED.": "BR-08",
+            "Production irregularity.": "BR-08",
+            "Production gap greater than 30 days.": "BR-08",
+        }
+
+        for event in self.switching_history:
+            if event["trigger_batch_id"] == batch_id:
+                rule_id = switching_rule_map.get(event["reason"])
+
+                if rule_id and rule_id not in applied_rules:
+                    applied_rules.append(rule_id)
+
+        applied_rules.sort(
+            key=lambda rule: int(rule.split("-")[1])
+        )
 
         decision_row = {
             "batch_id": batch_id,
@@ -375,24 +442,25 @@ class BatchEngine:
             "decision": decision,
             "batch_status": batch_status,
             "late": str(late).lower(),
-            "rule_ids": "",
+            "rule_ids": ";".join(applied_rules),
         }
 
         self.batch_decisions.append(decision_row)
 
-        self.release_register.append({
-            "timestamp": result_time.strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
-            "batch_id": batch_id,
-            "event": batch_status,
-            "from_status": previous_status,
-            "to_status": batch_status,
-            "reason": reason,
-            "cause_ref": "",
-        })
+        if not (runtime.hold_reinspection and critical > 0):
+            self.release_register.append({
+                "timestamp": result_time.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+                "batch_id": batch_id,
+                "event": batch_status,
+                "from_status": previous_status,
+                "to_status": batch_status,
+                "reason": reason,
+                "cause_ref": "",
+            })
 
-        # FIX: A critical defect during hold reinspection
+        # A critical defect during hold reinspection triggers recall.
         # automatically triggers a recall of the related RM lot.
         if runtime.hold_reinspection and critical > 0:
             # Restore ON_HOLD temporarily because complaint()
@@ -404,6 +472,9 @@ class BatchEngine:
                 result_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "HOLD_REINSPECTION_CRITICAL",
             )
+                        # Keep the inspection report consistent with the
+            # immediate recall triggered by hold reinspection.
+            decision_row["batch_status"] = runtime.status
 
         return decision_row
 

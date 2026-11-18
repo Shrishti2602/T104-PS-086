@@ -20,10 +20,14 @@ This document records the important technical decisions made during development 
 
 - Programming language selected: Python.
 - Repository: https://github.com/Shrishti2602/T104-PS-086
-- Latest recorded test result: 68 tests passed.
+- Latest recorded test result: 82 tests passed (18 November 2026).
 - Latest recorded project fix: automatic recall after a critical defect during hold reinspection.
-- Further implementation and report validation are in progress.
+- The supplied 382-command sample dataset has been executed and its three output reports have been validated. Final documentation, packaging and demonstration preparation remain.
 
 ## Future Updates
 
 New decisions, changes to business-rule interpretations, test findings and design improvements should be added here with their dates and reasons.
+
+| 11 | Record business-rule references in inspection decisions | Improves traceability between inspection results and the applicable business rules. |
+| 12 | Preserve ON_HOLD to RECALLED as a direct lifecycle transition for critical hold-reinspection defects | Keeps the release register consistent with the actual batch lifecycle while retaining the REJECT inspection decision. |
+| 13 | Validate the complete supplied command stream and generated reports | Checks integration behaviour across the supplied scenarios in addition to individual unit tests. |

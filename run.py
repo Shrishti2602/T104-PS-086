@@ -63,6 +63,7 @@ def export_reports(engine):
 
 
 
+
 def main():
     print("Loading project data...")
 
@@ -103,7 +104,7 @@ def main():
     print("\nExporting reports...")
     export_reports(engine)
 
-    print("\nCommand execution completed.")
+    print("\nCommand execution and report export completed.")
 
 
 if __name__ == "__main__":

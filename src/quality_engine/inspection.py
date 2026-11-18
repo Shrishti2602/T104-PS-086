@@ -41,7 +41,7 @@ def evaluate_inspection(
 
     failures = []
 
-    if critical >= critical_rule.re:
+    if critical >= 1:
         failures.append(
             f"critical defects {critical} reached Re={critical_rule.re}"
         )

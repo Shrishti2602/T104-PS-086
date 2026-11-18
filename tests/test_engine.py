@@ -72,6 +72,37 @@ def test_duplicate_sampling_without_hold_is_rejected(engine):
         engine.sample_batch("BT-0001", "2026-05-04 13:04:00")
 
 
+def test_sampling_from_discontinued_source_is_refused_and_recorded(engine):
+    batch_id = "BT-0001"
+    batch = engine.batches[batch_id]
+
+    engine.receive_batch(batch_id, "2026-05-04 09:48:00")
+
+    # Put the batch's source into DISCONTINUED state.
+    engine.source_states[batch.source_id].state = "DISCONTINUED"
+
+    original_status = engine.batch_runtime[batch_id].status
+
+    with pytest.raises(ValueError, match="DISCONTINUED"):
+        engine.sample_batch(batch_id, "2026-05-04 12:04:00")
+
+    # Sampling must remain blocked.
+    assert engine.batch_runtime[batch_id].status == original_status
+
+    # Exactly one refusal event must be recorded.
+    refusal_events = [
+        row for row in engine.release_register
+        if row["batch_id"] == batch_id
+        and row["event"] == "SAMPLE_REFUSED"
+    ]
+
+    assert len(refusal_events) == 1
+    assert refusal_events[0]["from_status"] == original_status
+    assert refusal_events[0]["to_status"] == original_status
+    assert "DISCONTINUED" in refusal_events[0]["reason"]
+
+
+
 def test_invalid_timestamp_is_rejected(engine):
     with pytest.raises(ValueError):
         engine.receive_batch("BT-0001", "04-05-2026")
@@ -215,6 +246,7 @@ def test_critical_defect_during_hold_reinspection_triggers_recall(engine):
 
     # The critical defect must automatically trigger recall.
     assert runtime.status == "RECALLED"
+    assert engine.batch_decisions[-1]["batch_status"] == "RECALLED"
 
     # Related eligible batches should also be recalled.
     recalled_ids = {
@@ -225,3 +257,149 @@ def test_critical_defect_during_hold_reinspection_triggers_recall(engine):
 
     assert target_id in recalled_ids
     assert len(recalled_ids) >= 1
+    rule_ids = engine.batch_decisions[-1]["rule_ids"].split(";")
+
+    assert "BR-11" in rule_ids
+    assert "BR-12" in rule_ids
+
+def test_result_exactly_48_hours_after_sampling_is_not_late(engine):
+    engine.receive_batch("BT-0001", "2026-05-04 09:48:00")
+    engine.sample_batch("BT-0001", "2026-05-04 12:04:00")
+
+    engine.record_result(
+        "BT-0001",
+        "2026-05-06 12:04:00",
+        0, 0, 0,
+    )
+
+    result = engine.batch_decisions[-1]
+    assert result["late"] == "false"
+    assert result["decision"] == "ACCEPT"
+
+
+def test_result_48_hours_and_one_second_after_sampling_is_late(engine):
+    engine.receive_batch("BT-0001", "2026-05-04 09:48:00")
+    engine.sample_batch("BT-0001", "2026-05-04 12:04:00")
+
+    engine.record_result(
+        "BT-0001",
+        "2026-05-06 12:04:01",
+        0, 0, 0,
+    )
+
+    result = engine.batch_decisions[-1]
+    assert result["late"] == "true"
+    assert result["decision"] == "ACCEPT"
+
+def test_release_allowed_with_exactly_75_percent_shelf_life_remaining(engine):
+    from dataclasses import replace
+    from datetime import date, timedelta
+
+    batch_id = "BT-0001"
+    batch = engine.batches[batch_id]
+    product = engine.products[batch.product_id]
+
+    mfg_date = date(2026, 1, 1)
+    expiry_date = mfg_date + timedelta(days=100)
+
+    engine.products[product.product_id] = replace(
+        product, shelf_life_days=100
+    )
+    engine.batches[batch_id] = replace(
+        batch, mfg_date=mfg_date, expiry_date=expiry_date
+    )
+    engine.source_states[batch.source_id].state = "NORMAL"
+
+    engine.receive_batch(batch_id, "2026-01-25 09:00:00")
+    engine.sample_batch(batch_id, "2026-01-25 10:00:00")
+    engine.record_result(batch_id, "2026-01-26 10:00:00", 0, 0, 0)
+
+    assert engine.batch_runtime[batch_id].status == "RELEASED"
+
+
+def test_release_rejected_with_less_than_75_percent_shelf_life_remaining(engine):
+    from dataclasses import replace
+    from datetime import date, timedelta
+
+    batch_id = "BT-0001"
+    batch = engine.batches[batch_id]
+    product = engine.products[batch.product_id]
+
+    mfg_date = date(2026, 1, 1)
+    expiry_date = mfg_date + timedelta(days=100)
+
+    engine.products[product.product_id] = replace(
+        product, shelf_life_days=100
+    )
+    engine.batches[batch_id] = replace(
+        batch, mfg_date=mfg_date, expiry_date=expiry_date
+    )
+    engine.source_states[batch.source_id].state = "NORMAL"
+
+    engine.receive_batch(batch_id, "2026-01-25 09:00:00")
+    engine.sample_batch(batch_id, "2026-01-25 10:00:00")
+    engine.record_result(batch_id, "2026-01-27 10:00:00", 0, 0, 0)
+
+    assert engine.batch_runtime[batch_id].status == "REJECTED"
+    assert engine.batch_decisions[-1]["decision"] == "ACCEPT"
+    assert engine.release_register[-1]["reason"] == "SHORT_DATED"
+def test_normal_inspection_records_base_rule_ids(engine):
+    batch_id = "BT-0001"
+
+    engine.receive_batch(batch_id, "2026-05-04 09:48:00")
+    engine.sample_batch(batch_id, "2026-05-04 12:04:00")
+
+    result = engine.record_result(
+        batch_id, "2026-05-04 13:04:00", 0, 0, 0
+    )
+
+    rule_ids = result["rule_ids"].split(";")
+
+    assert "BR-01" in rule_ids
+    assert "BR-02" in rule_ids
+    assert rule_ids == sorted(
+        rule_ids, key=lambda rule: int(rule.split("-")[1])
+    )
+
+
+def test_late_result_records_br14(engine):
+    batch_id = "BT-0001"
+
+    engine.receive_batch(batch_id, "2026-05-04 09:48:00")
+    engine.sample_batch(batch_id, "2026-05-04 12:04:00")
+
+    result = engine.record_result(
+        batch_id, "2026-05-06 12:04:01", 0, 0, 0
+    )
+
+    assert "BR-14" in result["rule_ids"].split(";")
+
+
+def test_short_dated_result_records_br13(engine):
+    from dataclasses import replace
+    from datetime import date, timedelta
+
+    batch_id = "BT-0001"
+    batch = engine.batches[batch_id]
+    product = engine.products[batch.product_id]
+
+    mfg_date = date(2026, 1, 1)
+    expiry_date = mfg_date + timedelta(days=100)
+
+    engine.products[product.product_id] = replace(
+        product, shelf_life_days=100
+    )
+    engine.batches[batch_id] = replace(
+        batch, mfg_date=mfg_date, expiry_date=expiry_date
+    )
+
+    engine.receive_batch(batch_id, "2026-01-25 09:00:00")
+    engine.sample_batch(batch_id, "2026-01-25 10:00:00")
+
+    result = engine.record_result(
+        batch_id, "2026-01-27 10:00:00", 0, 0, 0
+    )
+
+    assert result["decision"] == "ACCEPT"
+    assert result["batch_status"] == "REJECTED"
+    assert "BR-13" in result["rule_ids"].split(";")

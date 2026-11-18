@@ -1,9 +1,11 @@
-
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 
-from quality_engine.data_loader import load_sampling_table
+from quality_engine.data_loader import (
+    load_sampling_table,
+    SamplingRule,
+)
 from quality_engine.inspection import evaluate_inspection
 
 
@@ -28,18 +30,15 @@ def test_zero_defects_are_accepted():
 
 
 def test_critical_defect_reaching_re_rejects():
-    result = evaluate(c=CRITICAL.re)
-    assert result.decision == "REJECT"
+    assert evaluate(c=CRITICAL.re).decision == "REJECT"
 
 
 def test_major_defect_reaching_re_rejects():
-    result = evaluate(m=MAJOR.re)
-    assert result.decision == "REJECT"
+    assert evaluate(m=MAJOR.re).decision == "REJECT"
 
 
 def test_minor_defect_reaching_re_rejects():
-    result = evaluate(n=MINOR.re)
-    assert result.decision == "REJECT"
+    assert evaluate(n=MINOR.re).decision == "REJECT"
 
 
 def test_exactly_ac_is_accepted():
@@ -62,10 +61,32 @@ def test_fractional_defect_count_is_invalid():
 
 
 def test_critical_defect_always_rejects():
-    result = evaluate(c=1)
-    assert result.decision == "REJECT"
+    assert evaluate(c=1).decision == "REJECT"
 
 
 def test_rejection_reason_identifies_defect_class():
     result = evaluate(m=MAJOR.re)
     assert "major" in result.reason
+
+
+def test_single_critical_defect_rejects_even_when_re_is_greater_than_one():
+    critical_rule = SamplingRule(
+        code_letter="A",
+        aql="0.065",
+        severity="NORMAL",
+        sample_size=5,
+        ac=0,
+        re=2,
+        reduced_limit=0,
+    )
+
+    result = evaluate_inspection(
+        critical=1,
+        major=0,
+        minor=0,
+        critical_rule=critical_rule,
+        major_rule=MAJOR,
+        minor_rule=MINOR,
+    )
+
+    assert result.decision == "REJECT"

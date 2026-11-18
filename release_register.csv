@@ -84,6 +84,7 @@ timestamp,batch_id,event,from_status,to_status,reason,cause_ref
 2026-08-17 14:44:00,BT-0080,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
 2026-08-17 16:41:00,BT-0078,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
 2026-08-18 18:27:00,BT-0079,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
+2026-08-24 12:26:00,BT-0082,SAMPLE_REFUSED,QUARANTINE,QUARANTINE,Sampling refused: source SUP-03 is DISCONTINUED.,
 2026-08-25 08:13:00,BT-0081,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
 2026-08-27 11:36:00,BT-0082,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
 2026-08-28 15:10:00,BT-0074,RECALLED,RELEASED,RECALLED,Customer complaint recall cascade.,CMP-2807
@@ -103,7 +104,6 @@ timestamp,batch_id,event,from_status,to_status,reason,cause_ref
 2026-09-11 18:00:00,BT-0073,ON_HOLD,RELEASED,ON_HOLD,Related batch rejected for a critical defect.,BT-0096
 2026-09-11 18:05:00,BT-0072,HOLD_REFUSED,RELEASED,RELEASED,Hold request is more than 30 days after release.,BT-0096
 2026-09-11 18:08:00,BT-0094,RELEASED,UNDER_INSPECTION,RELEASED,All defect counts are below their rejection limits.,
-2026-09-13 07:00:00,BT-0073,REJECTED,UNDER_INSPECTION,REJECTED,critical defects 1 reached Re=1,
 2026-09-13 07:00:00,BT-0016,NOT_RECALLED_EXPIRED,RELEASED,RELEASED,Batch expired before the recall date.,HOLD_REINSPECTION_CRITICAL
 2026-09-13 07:00:00,BT-0035,RECALLED,RELEASED,RECALLED,Customer complaint recall cascade.,HOLD_REINSPECTION_CRITICAL
 2026-09-13 07:00:00,BT-0045,RECALLED,RELEASED,RECALLED,Customer complaint recall cascade.,HOLD_REINSPECTION_CRITICAL
