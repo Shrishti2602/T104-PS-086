@@ -1,198 +1,167 @@
-﻿# PS-086  AQL Sampling, Inspection Severity and Batch Release Engine
+# AQL Sampling, Inspection Severity and Batch Release Engine
 
-**Team:** T104
-**Project:** AQL Sampling, Inspection Severity and Batch Release Engine
-**Language:** Python 3.10+
-**Repository:** https://github.com/Shrishti2602/T104-PS-086
+**Project:** AQL Sampling, Inspection Severity and Batch Release Engine  
+**Team:** T104  
+**Problem Statement:** PS-086  
+**Language:** Python 3.10+  
+**Repository:** [T104-PS-086 on GitHub](https://github.com/Shrishti2602/T104-PS-086)
 
-## 1. Problem Overview
+---
 
-Manufacturing companies inspect incoming materials and production batches to ensure that products meet quality standards before release.
+## 1. Project Overview
 
-Manual inspection and decision-making can lead to inconsistent quality checks, delayed releases, errors in defect evaluation, and difficulty tracking supplier performance.
+Manufacturing organisations inspect incoming materials and production batches before releasing them. These inspections help ensure that products meet defined quality requirements.
 
-This project develops a Python-based quality inspection engine that automates AQL-based sampling, defect evaluation, supplier switching rules, batch lifecycle management, and report generation.
+Manual inspection workflows can make it difficult to apply sampling rules consistently, monitor supplier performance, and maintain a clear history of batch decisions.
 
-The application is a local, command-line and file-driven backend system.
+This project implements a **Python-based, command-line AQL inspection engine**. It processes a sequence of commands from an input file, applies the defined sampling and quality rules, manages supplier and production-line inspection states, tracks batch lifecycle events, and exports structured CSV reports.
 
-## 2. Objectives
+The application is a local, file-driven backend system. It does not include a graphical user interface or a database server.
 
-- Automate AQL-based acceptance sampling.
-- Classify defects as critical, major, and minor.
-- Accept or reject batches based on inspection results.
-- Track supplier and production-line inspection states.
-- Implement rework, hold, and recall procedures.
-- Apply corrective actions to discontinued sources.
-- Validate shelf-life requirements before release.
-- Identify late inspection results.
-- Generate structured CSV reports for evaluation.
+## 2. Project Objectives
 
-## 3. Technologies Used
+- Apply AQL-based acceptance sampling using lot-size bands and sampling plans.
+- Evaluate critical, major, and minor defects using their respective AQL limits.
+- Make batch inspection decisions and maintain batch status.
+- Track inspection severity for suppliers and production lines.
+- Apply rework, hold, recall, and corrective-action procedures.
+- Enforce shelf-life and inspection-result timing rules.
+- Maintain an auditable record of inspection decisions and state transitions.
+- Generate structured CSV reports for review and evaluation.
+
+## 3. Main Capabilities
+
+| Capability | What the engine does |
+|---|---|
+| AQL sampling | Selects a sampling code letter and sampling plan based on lot size and inspection severity. |
+| Defect evaluation | Evaluates critical, major, and minor defects against their respective acceptance and rejection limits. |
+| Full-lot inspection | Inspects the full lot when the required sample size is greater than or equal to the lot size. |
+| Severity switching | Tracks NORMAL, TIGHTENED, REDUCED, and DISCONTINUED source states according to the defined rules. |
+| Rework and reinspection | Applies the configured rework eligibility rules and records subsequent inspection results. |
+| Hold and recall | Records hold requests and manages recall actions, including eligible related batches. |
+| Corrective action | Supports corrective action for a discontinued source. |
+| Shelf-life validation | Prevents release when the remaining shelf life does not meet the required threshold. |
+| Timing validation | Identifies inspection results recorded more than 48 hours after sampling. |
+| Reporting | Exports inspection decisions, switching history, and batch lifecycle events to CSV. |
+
+## 4. Technologies
 
 | Technology | Purpose |
 |---|---|
-| Python 3.10+ | Main programming language |
+| Python 3.10+ | Core application and inspection logic |
+| CSV | Input data and generated reports |
 | Pytest | Automated testing |
-| CSV | Input data and report generation |
 | Git | Version control |
-| GitHub | Source code repository |
-| ReportLab | PDF generation |
+| GitHub | Source-code hosting |
+| ReportLab | Design-document PDF generation |
 
-## 4. Project Structure
+## 5. Repository Structure
+
+The main project files are organised as follows:
 
 ```text
 T104-PS-086/
---------- data/
----   ------ products.csv
----   ------ sources.csv
----   ------ batches.csv
----   -------lot_size_bands.csv
----   -------sampling_table.csv
----   -------commands.txt
----------- src/
----   ------- quality_engine/
----       ------ __init__.py
----       ------ engine.py
--------- tests/
----------docs/
----   ------- design_document.md
----   --------design_document.pdf
----   ------- decision_log.md
--------- run.py
---------- make_pdf.py
---------- batch_decisions.csv
---------- switching_history.csv
---------- release_register.csv
---------- README.md
---------- .gitignore
+├── data/
+│   ├── products.csv
+│   ├── sources.csv
+│   ├── batches.csv
+│   ├── lot_size_bands.csv
+│   ├── sampling_table.csv
+│   └── commands.txt
+├── src/
+│   └── quality_engine/
+├── tests/
+├── docs/
+│   ├── design_document.md
+│   ├── design_document.pdf
+│   └── decision_log.md
+├── run.py
+├── make_pdf.py
+├── batch_decisions.csv
+├── switching_history.csv
+├── release_register.csv
+├── README.md
+└── .gitignore
 ```
 
-## 5. Files Included in the Sample Data Pack
+The three CSV reports are generated by running the application.
 
-The supplied sample data pack contains six input files.
+## 6. Input Data
 
-| File | Purpose | Data rows / commands |
+The sample data pack contains six input files.
+
+| Input file | Purpose | Records / commands |
 |---|---|---:|
-| `products.csv` | Product details, shelf life and defect-class AQL values | 8 |
-| `sources.csv` | Six suppliers and two production lines, with initial switching states | 8 |
-| `lot_size_bands.csv` | Inclusive lot-size ranges mapped to code letters | 11 |
-| `sampling_table.csv` | Sample size, Ac, Re and reduced limits | 99 |
-| `batches.csv` | Incoming and production batch information | 120 |
-| `commands.txt` | Ordered command stream | 382 non-comment commands |
+| `products.csv` | Product details, shelf life, and defect-class AQL values | 8 |
+| `sources.csv` | Supplier and production-line details and initial inspection states | 8 |
+| `batches.csv` | Batch, product, source, lot, and date information | 120 |
+| `lot_size_bands.csv` | Inclusive lot-size ranges mapped to sampling code letters | 11 |
+| `sampling_table.csv` | Sample sizes, acceptance numbers, rejection numbers, and reduced limits | 99 |
+| `commands.txt` | Ordered command stream processed by the engine | 382 non-comment commands |
 
-The data pack includes both supplier sources (`SUP-xx`) and production-line sources (`LINE-xx`).
+The source data includes supplier identifiers (`SUP-xx`) and production-line identifiers (`LINE-xx`).
 
-## 6. Input File Column Reference
+### Input file details
 
-### 6.1 products.csv
+**`products.csv`**
 
-Contains product information and the AQL values used for inspection.
+Contains product identifiers, product names, category, shelf life, and AQL values for critical, major, and minor defects.
 
-| Column | Description |
-|---|---|
-| `product_id` | Unique product identifier, such as PRD-nn |
-| `product_name` | Product name |
-| `category` | Product category: PHARMA or FOOD |
-| `shelf_life_days` | Total shelf life in days |
-| `aql_critical` | Critical defect AQL, 0.065 |
-| `aql_major` | Major defect AQL, 1.0 |
-| `aql_minor` | Minor defect AQL, 1.0 or 2.5 |
+**`sources.csv`**
 
-### 6.2 sources.csv
+Contains source identifiers, source type, name, location, initial inspection state, and the previous batch date used by the production-gap rule.
 
-Contains suppliers and production lines that own inspection histories.
+**`batches.csv`**
 
-| Column | Description |
-|---|---|
-| `source_id` | Unique source ID, such as SUP-nn or LINE-nn |
-| `source_type` | SUPPLIER or LINE |
-| `source_name` | Source name |
-| `location` | Source location |
-| `initial_state` | Initial state: NORMAL or REDUCED |
-| `last_batch_date` | Previous batch date used for the 30-day gap rule |
+Contains batch identifiers, product and source references, raw-material lot identifiers, lot sizes, manufacturing dates, and expiry dates.
 
-### 6.3 lot_size_bands.csv
+**`lot_size_bands.csv`**
 
-Maps batch lot sizes to sampling code letters.
+Maps inclusive lot-size ranges to sampling code letters. The code-letter sequence omits `I`.
 
-| Column | Description |
-|---|---|
-| `lot_from` | Inclusive lower lot-size limit |
-| `lot_to` | Inclusive upper lot-size limit |
-| `code_letter` | Sampling code letter A through L, with I omitted |
+**`sampling_table.csv`**
 
-### 6.4 sampling_table.csv
+Contains the sampling plan for each code letter, AQL, and inspection severity. Its fields include sample size (`n`), acceptance number (`Ac`), rejection number (`Re`), and reduced limit.
 
-Contains the sampling plan for each code letter, AQL and inspection severity.
+**`commands.txt`**
 
-| Column | Description |
-|---|---|
-| `code_letter` | Lot-size sampling code |
-| `aql` | Acceptance Quality Limit |
-| `severity` | NORMAL, TIGHTENED or REDUCED |
-| `sample_size` | Required sample size (n) |
-| `ac` | Acceptance number |
-| `re` | Rejection number |
-| `reduced_limit` | Maximum total defects allowed for the NORMAL-to-REDUCED test; used from NORMAL rows |
+Contains the ordered commands that drive the application. Commands are processed in file order.
 
-If the required sample size is greater than or equal to the lot size, the entire lot is inspected. The Ac and Re values remain unchanged.
-
-### 6.5 batches.csv
-
-Contains batch and raw-material information.
-
-| Column | Description |
-|---|---|
-| `batch_id` | Unique batch identifier, such as BT-nnnn |
-| `product_id` | Reference to products.csv |
-| `source_id` | Reference to sources.csv |
-| `rm_lot` | Raw-material lot identifier used for hold and recall relationships |
-| `lot_size` | Total units in the batch |
-| `mfg_date` | Manufacturing date |
-| `expiry_date` | Expiry date |
-
-### 6.6 Data Format Conventions
+### Data conventions
 
 - Dates use `YYYY-MM-DD`.
-- Timestamps use `YYYY-MM-DD HH:MM:SS` in 24-hour IST format, without a timezone suffix.
-- IDs use uppercase letters and fixed prefixes.
+- Timestamps use `YYYY-MM-DD HH:MM:SS` in 24-hour format.
+- Identifiers use uppercase letters and fixed prefixes.
 - Boolean values use `true` or `false`.
-- Empty cells indicate not applicable where permitted.
-- Row references in the sample pack are 1-based data-row numbers; the header is row 0.
-- Command-file line references count physical lines, including comments.
+- Blank arguments are represented by consecutive pipe characters where permitted.
+- Lines beginning with `#` are comments; blank lines are ignored.
 
-## 7. Command File Format
+## 7. Command Processing
 
-The `commands.txt` file contains one command per line.
+Each command is written on a separate line. Arguments are separated by the pipe (`|`) character.
 
 General format:
 
 ```text
-COMMAND_NAME|arg1|arg2|...
+COMMAND_NAME|argument1|argument2|...
 ```
 
-Commands must be processed strictly in file order.
+### Supported commands
 
-- Lines starting with `#` are comments.
-- Blank lines are ignored.
-- An empty argument, represented by two consecutive pipes, means that the argument was not supplied.
-
-### Supported Commands
-
-| Command | Arguments in order | Purpose |
+| Command | Arguments | Purpose |
 |---|---|---|
-| `RECEIVE_BATCH` | `batch_id|timestamp` | Receives a batch into QUARANTINE |
-| `SAMPLE` | `batch_id|timestamp` | Selects the sample using the current inspection state |
-| `RECORD_RESULT` | `batch_id|timestamp|critical|major|minor` | Records defect counts and determines the decision |
-| `REWORK` | `batch_id|timestamp` | Requests one permitted rework attempt |
-| `HOLD_REQUEST` | `batch_id|timestamp|cause_batch_id` | Requests a hold on a related released batch |
-| `COMPLAINT` | `batch_id|timestamp|complaint_ref` | Records a customer complaint and triggers recall processing |
-| `CORRECTIVE_ACTION` | `source_id|timestamp|car_ref` | Restarts a discontinued source at TIGHTENED |
-| `PRINT_DECISIONS` | No arguments | Requests inspection decision output |
-| `PRINT_SWITCHING` | `source_id` | Requests a source switching timeline |
-| `PRINT_RELEASE_REGISTER` | No arguments | Requests lifecycle event output |
+| `RECEIVE_BATCH` | `batch_id`, `timestamp` | Records receipt of a batch. |
+| `SAMPLE` | `batch_id`, `timestamp` | Performs the sampling step for a batch. |
+| `RECORD_RESULT` | `batch_id`, `timestamp`, critical count, major count, minor count | Records the inspection result. |
+| `REWORK` | `batch_id`, `timestamp` | Requests rework when permitted by the rules. |
+| `HOLD_REQUEST` | `batch_id`, `timestamp` | Requests a hold for a released batch when eligible. |
+| `COMPLAINT` | `batch_id`, `timestamp` | Records a complaint and triggers applicable handling. |
+| `CORRECTIVE_ACTION` | `source_id`, `timestamp` | Records corrective action for a source. |
+| `PRINT_DECISIONS` | None | Requests inspection-decision output. |
+| `PRINT_SWITCHING` | `source_id` | Requests a source switching timeline. |
+| `PRINT_RELEASE_REGISTER` | None | Requests lifecycle-register output. |
 
-### Example Commands
+Example command sequence:
 
 ```text
 RECEIVE_BATCH|BT-0001|2026-05-01 09:00:00
@@ -204,111 +173,83 @@ PRINT_SWITCHING|SUP-01
 PRINT_RELEASE_REGISTER
 ```
 
-The actual sample command file contains the supplied command sequence. The example above illustrates the syntax only.
+The example illustrates the command format. The actual execution uses the complete command sequence in `data/commands.txt`.
 
-## 8. Planted Scenarios and Edge Cases
+## 8. Important Business Rules and Scenarios
 
-The sample data pack deliberately includes scenarios to test important business rules.
+The sample data includes boundary conditions and planted scenarios to exercise the project rules.
 
-| Scenario | What it tests | Sample reference |
+| Scenario | Rule or behaviour tested | Sample reference |
 |---|---|---|
-| EC-01 | Lot size 280 versus 281 maps to different code letters | BT-0019 and BT-0029 |
-| EC-02 | Defects exactly equal to Ac are accepted; exactly equal to Re are rejected | BT-0018 and BT-0044 |
-| EC-03 | A result between Ac and Re under REDUCED is accepted but switches the source to NORMAL | BT-0004 |
-| EC-04 | Two rejections within five consecutive batches trigger TIGHTENED | SUP-02, BT-0022 and BT-0054 |
-| EC-05 | Rework is allowed when major defects equal exactly twice Re | BT-0030; comparison with BT-0070 |
-| EC-06 | Hold requests on day 30 and day 31 after release are treated differently | BT-0073 and BT-0072 |
-| EC-07 | Recall cascades to eligible related batches but excludes already expired batches | BT-0073 and related RM lot RM-S05-2608 |
-| EC-08 | A result recorded exactly 48 hours after sampling is on time | BT-0047; comparison with BT-0031 |
+| Lot-size boundary | Lot sizes 280 and 281 map to different code letters. | BT-0019 and BT-0029 |
+| Acceptance/rejection boundary | Defect counts at `Ac` and `Re` are evaluated at their exact boundaries. | BT-0018 and BT-0044 |
+| Reduced-to-normal transition | An accepted result between `Ac` and `Re` under REDUCED causes the source to return to NORMAL. | BT-0004 |
+| Tightened inspection | Two rejections within five consecutive batches trigger TIGHTENED. | SUP-02, BT-0022 and BT-0054 |
+| Rework eligibility | Rework is allowed at the defined boundary; exceeding twice `Re` is refused. | BT-0030 and BT-0070 |
+| Hold time window | Hold requests on day 30 and day 31 are treated differently. | BT-0073 and BT-0072 |
+| Recall cascade | Eligible related batches sharing a raw-material lot are considered for recall; expired batches are excluded. | BT-0073 |
+| Result timing | A result recorded exactly 48 hours after sampling is on time; a result beyond 48 hours is late. | BT-0047 and BT-0031 |
+| Discontinued source | Sampling is refused while a source is DISCONTINUED, until corrective action is recorded. | SUP-03 and BT-0082 |
+| Shelf-life restriction | An otherwise accepted batch can be rejected if remaining shelf life is below 75%. | BT-0090 |
+| Production gap | A production gap greater than 30 days can return a REDUCED source to NORMAL before sampling. | BT-0001 |
+| Reduced acceptance run | A late accepted batch is skipped in the 10-counted-acceptance REDUCED test. | BT-0086 |
 
-### Additional Planted Traps
+### Evaluation clarifications implemented
 
-- **BT-0086:** A late acceptance is skipped in the 10-counted-acceptance REDUCED test.
-- **SUP-03 / BT-0082:** The fifth rejection while TIGHTENED leads to DISCONTINUED. Sampling is refused until corrective action.
-- **BT-0090:** An otherwise accepted batch is rejected as SHORT_DATED because remaining shelf life is below 75%.
-- **BT-0001:** A production gap greater than 30 days causes a REDUCED source to return to NORMAL before sampling.
-- **Complaint commands:** Additional complaint scenarios test recall cascades for BT-0061 and BT-0074.
+The following rules clarify how the engine applies the inspection and lifecycle requirements:
 
-These cases help validate boundary conditions, switching transitions, lifecycle rules, and timing requirements.
+- Each defect class uses its own sample size, `Ac`, and `Re` from its AQL row.
+- The sample drawn is the largest of the class-specific sample sizes.
+- Each defect class is evaluated using its own acceptance and rejection numbers.
+- Switching calculations use first-inspection decisions only. Rework and hold re-inspections are not counted.
+- A `SHORT_DATED` rejection counts as an acceptance for switching calculations.
+- “Within five consecutive batches” means the current batch and the four preceding batches in the current NORMAL spell.
+- A late accepted batch is skipped in the 10-in-a-row REDUCED test: it neither counts nor breaks the run. A rejection breaks the run.
+- The reduced limit is taken from the NORMAL row for the tenth counted lot's code letter, separately for each defect class.
+- The 30-day production gap is measured between consecutive `RECEIVE_BATCH` dates for a source and is applied before sampling.
+- The hold window is calculated as the date of `HOLD_REQUEST` minus the release date and must be 30 days or less.
+- Recall cascades to eligible `RELEASED` or `ON_HOLD` batches sharing the same raw-material lot, where the expiry date is on or after the recall date.
+- A batch is `SHORT_DATED` when remaining shelf life at release is less than 75% of its total shelf life.
 
-## 9. What Is Not Included in the Sample Pack
+## 9. Generated Reports
 
-The supplied sample pack does not provide expected output CSV files for the sample input set.
+Running `python run.py` generates three CSV files in the project root.
 
-The developer must validate the implementation using automated tests and the business rules in the project brief.
+| Output file | Contents | Verified sample rows |
+|---|---|---:|
+| `batch_decisions.csv` | One row per `RECORD_RESULT` command, including reinspection results | 122 |
+| `switching_history.csv` | One row for each source inspection-state transition | 9 |
+| `release_register.csv` | Batch lifecycle events such as release, rejection, hold, and recall | 134 |
 
-A separate hidden input set with the same schema is used during final evaluation. The evaluator compares generated output fields against expected results.
+### Report columns
 
-The sample pack is an input and evaluation-clarification resource; it does not replace the original assignment brief or mentor clarifications.
-
-The project is a local backend application. A graphical user interface, web application, database server, authentication system, and external integrations are outside the stated scope.
-
-## 10. Output Format Expected at Evaluation
-
-The engine must generate three CSV files with header rows and the exact column order specified below.
-
-### 10.1 batch_decisions.csv
-
-Contains one row per `RECORD_RESULT` command. Re-inspection results are recorded as separate rows.
-
-Rows must be in command order.
-
-**Columns in exact order:**
+**`batch_decisions.csv`**
 
 ```text
 batch_id,inspection_no,source_state,code_letter,n_critical,n_major,n_minor,full_inspection,critical,major,minor,ac_major,re_major,ac_minor,re_minor,decision,batch_status,late,rule_ids
 ```
 
-- `decision`: ACCEPT or REJECT.
-- `batch_status`: RELEASED, REJECTED, ON_HOLD or RECALLED.
-- `late`: identifies results recorded more than 48 hours after sampling.
-- `rule_ids`: rule-reference field.
-
-### 10.2 switching_history.csv
-
-Contains one row for every source inspection-state transition.
-
-Rows must be in time order.
-
-**Columns in exact order:**
+**`switching_history.csv`**
 
 ```text
 source_id,timestamp,from_state,to_state,trigger_batch_id,reason
 ```
 
-### 10.3 release_register.csv
-
-Contains one row per lifecycle event.
-
-Events include RELEASED, REJECTED, REWORK, ON_HOLD, HOLD_REFUSED, RECALLED, NOT_RECALLED_EXPIRED and SAMPLE_REFUSED.
-
-**Columns in exact order:**
+**`release_register.csv`**
 
 ```text
 timestamp,batch_id,event,from_status,to_status,reason,cause_ref
 ```
 
-### Evaluation Binding Rules
+The reports include header rows and are written in the column order shown above.
 
-The following clarifications apply where the original brief leaves a format detail open:
+## 10. Setup and Execution
 
-- Each defect class uses its own sample size, Ac and Re from its AQL row.
-- The inspector draws the largest class-specific sample size.
-- Each defect class is judged using its own Ac and Re.
-- Switching uses first-inspection decisions only. Rework and hold re-inspections do not count.
-- A SHORT_DATED rejection counts as an acceptance for switching.
-- Within five consecutive batches means the current batch and the four before it in the current NORMAL spell.
-- A late accepted batch is skipped in the 10-in-a-row REDUCED test: it neither counts nor breaks the run. A rejection breaks the run.
-- The reduced limit comes from the NORMAL row of the tenth counted lot's code letter, separately for each defect class.
-- The 30-day production gap is measured between consecutive RECEIVE_BATCH dates for a source and is applied before sampling.
-- The hold window is calculated as the date of HOLD_REQUEST minus the release date, and must be 30 days or less.
-- Recall cascades to RELEASED or ON_HOLD batches sharing the same raw-material lot where expiry date is on or after the recall date.
-- A batch is SHORT_DATED when remaining shelf life at release is less than 75% of its total shelf life.
-- Decision values are ACCEPT or REJECT.
-- Batch status values are RELEASED, REJECTED, ON_HOLD or RECALLED.
-- Example reason values include CRITICAL, MAJOR_GE_RE, MINOR_GE_RE, SHORT_DATED and BETWEEN_AC_RE.
+### Prerequisites
 
-## 11. Developer Setup and Usage
+- Python 3.10 or later
+- Git
+- Windows PowerShell or another terminal
 
 ### Clone the repository
 
@@ -317,90 +258,99 @@ git clone https://github.com/Shrishti2602/T104-PS-086.git
 cd T104-PS-086
 ```
 
-### Create a virtual environment
+### Create and activate a virtual environment
 
-```bash
-python -m venv .venv
-```
-
-### Activate the environment (Windows PowerShell)
+**Windows PowerShell:**
 
 ```powershell
-.venv\Scripts\Activate.ps1
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-### Install the project and required tools
+### Install the project and supporting tools
 
-```bash
+```powershell
 python -m pip install -e .
 python -m pip install pytest reportlab markdown
 ```
 
-### Run the project
+### Run the inspection engine
 
-```bash
+```powershell
 python run.py
 ```
 
-### Run automated tests
+The terminal displays:
+1. A project heading.
+2. The number of records loaded from each input file.
+3. An execution summary.
+4. A report summary showing the three generated CSV files and their row counts.
+5. A completion message.
 
-```bash
+### Run the automated tests
+
+```powershell
 python -m pytest -q
 ```
 
 ### Generate the design document PDF
 
-```bash
+```powershell
 python make_pdf.py
 ```
 
-## 12. Week 3 Compliance Summary
+## 11. Local Validation Results
 
-### Implemented Features
+The supplied sample data was executed locally. The latest verified run produced the following results:
 
-- AQL-based sampling and lot-size code-letter selection.
-- Critical, major, and minor defect classification.
-- Batch acceptance and rejection decisions.
-- Supplier and production-line switching between NORMAL, TIGHTENED, REDUCED and DISCONTINUED.
-- Rework and reinspection.
-- Batch hold and hold reinspection.
-- Recall and related-batch recall handling.
-- Corrective action for discontinued sources.
-- Shelf-life validation before release.
-- Late inspection result handling.
-- CSV report generation.
-
-### Testing Evidence
-
-The supplied sample data was executed successfully.
-
-| Item | Result |
+| Validation item | Result |
 |---|---:|
 | Products loaded | 8 |
 | Sources loaded | 8 |
 | Batches loaded | 120 |
+| Lot-size bands loaded | 11 |
 | Sampling rules loaded | 99 |
 | Commands executed | 382 |
 | Inspection decisions | 122 |
-| Switching transitions | 9 |
 | Lifecycle events | 134 |
-| Automated tests passed | 68 |
+| Switching transitions | 9 |
+| Print requests | 10 |
+| `batch_decisions.csv` records | 122 |
+| `switching_history.csv` records | 9 |
+| `release_register.csv` records | 134 |
+| Automated tests passed | 82 |
 
-Three CSV reports are generated:
+The run also exercised two expected refusal cases:
 
-- `batch_decisions.csv`
-- `switching_history.csv`
-- `release_register.csv`
+- `REWORK|BT-0070|2026-08-09 18:40:00` — refused because major defects exceeded twice the rejection number.
+- `SAMPLE|BT-0082|2026-08-24 12:26:00` — refused because source `SUP-03` was in DISCONTINUED state.
 
-The local automated test suite completed with 68 passing tests. This is local test evidence and does not represent a claim that the separate hidden evaluation set has been passed.
+**Validation scope:** These results describe the local sample-data execution and local automated test suite. They do not claim that a separate hidden evaluation dataset has been executed or passed.
 
-### Remaining Tasks
+## 12. Project Scope and Limitations
 
-- Record and add the five-minute project demonstration video link.
-- Complete the final repository and submission review.
+This project is a local, command-line, file-driven backend application. The stated scope does not include:
 
-## 13. Conclusion
+- A graphical user interface or web application.
+- A database server.
+- User authentication.
+- External service integrations.
 
-The AQL Sampling, Inspection Severity and Batch Release Engine automates important manufacturing quality-control activities. It provides consistent inspection decisions, supplier monitoring, batch lifecycle tracking, and structured reports.
+The sample pack is an input and evaluation-clarification resource. It does not replace the original project brief or mentor clarifications. The final evaluator may use a separate hidden input set with the same schema.
 
-The project is designed to process command-file inputs and produce evaluation-ready CSV outputs while applying the specified sampling, switching, rework, hold, recall, and shelf-life rules.
+## 13. Submission Checklist
+
+- [x] AQL inspection engine implemented.
+- [x] Supplier and production-line switching logic implemented.
+- [x] Rework, hold, recall, corrective-action, and shelf-life rules implemented.
+- [x] Three CSV reports generated with the required columns.
+- [x] Sample command file executed successfully.
+- [x] Local automated test suite: 82 tests passed.
+- [ ] Record the final project demonstration and add its link here.
+- [ ] Complete the final submission review against the official project brief.
+
+## 14. Conclusion
+
+The AQL Sampling, Inspection Severity and Batch Release Engine brings inspection decisions, source monitoring, batch lifecycle tracking, and report generation into one Python-based workflow.
+
+It processes an ordered command file, applies the defined quality and business rules, and produces structured CSV reports that support review and traceability.
