@@ -53,7 +53,6 @@ The application is a local, file-driven backend system. It does not include a gr
 | Pytest | Automated testing |
 | Git | Version control |
 | GitHub | Source-code hosting |
-| ReportLab | Design-document PDF generation |
 
 ## 5. Repository Structure
 
@@ -72,11 +71,10 @@ T104-PS-086/
 │   └── quality_engine/
 ├── tests/
 ├── docs/
-│   ├── design_document.md
-│   ├── design_document.pdf
+│   ├── T104_PS086_Design_Document.docx
+│   ├── T104_PS086_Design_Document.pdf
 │   └── decision_log.md
 ├── run.py
-├── make_pdf.py
 ├── batch_decisions.csv
 ├── switching_history.csv
 ├── release_register.csv
@@ -202,7 +200,7 @@ The following rules clarify how the engine applies the inspection and lifecycle 
 - The sample drawn is the largest of the class-specific sample sizes.
 - Each defect class is evaluated using its own acceptance and rejection numbers.
 - Switching calculations use first-inspection decisions only. Rework and hold re-inspections are not counted.
-- A `SHORT_DATED` rejection counts as an acceptance for switching calculations.
+- A `SHORT_DATED` rejection counts as an acceptance for switching calculations; the batch itself is not treated as accepted.
 - “Within five consecutive batches” means the current batch and the four preceding batches in the current NORMAL spell.
 - A late accepted batch is skipped in the 10-in-a-row REDUCED test: it neither counts nor breaks the run. A rejection breaks the run.
 - The reduced limit is taken from the NORMAL row for the tenth counted lot's code letter, separately for each defect class.
@@ -219,7 +217,7 @@ Running `python run.py` generates three CSV files in the project root.
 |---|---|---:|
 | `batch_decisions.csv` | One row per `RECORD_RESULT` command, including reinspection results | 122 |
 | `switching_history.csv` | One row for each source inspection-state transition | 9 |
-| `release_register.csv` | Batch lifecycle events such as release, rejection, hold, and recall | 134 |
+| `release_register.csv` | Batch lifecycle events such as release, rejection, rework, hold, refusal, and recall | 134 |
 
 ### Report columns
 
@@ -271,7 +269,7 @@ python -m venv .venv
 
 ```powershell
 python -m pip install -e .
-python -m pip install pytest reportlab markdown
+python -m pip install pytest
 ```
 
 ### Run the inspection engine
@@ -281,6 +279,7 @@ python run.py
 ```
 
 The terminal displays:
+
 1. A project heading.
 2. The number of records loaded from each input file.
 3. An execution summary.
@@ -291,12 +290,6 @@ The terminal displays:
 
 ```powershell
 python -m pytest -q
-```
-
-### Generate the design document PDF
-
-```powershell
-python make_pdf.py
 ```
 
 ## 11. Local Validation Results
